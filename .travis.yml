@@ -1,0 +1,33 @@
+language: java
+before_script:
+- unset _JAVA_OPTIONS
+- cd finish
+script:
+- mvn clean install
+after_script:
+- build=$(grep "Open Liberty" target/liberty/wlp/usr/servers/defaultServer/logs/console.log
+  | cut -d' ' -f5 | cut -d')' -f1 ); release=$( echo "$build" | cut -d'/' -f1); number=$(
+  echo "$build" | cut -d'/' -f2); ol_jv=$(grep -i "on java" target/liberty/wlp/usr/servers/defaultServer/logs/console.log);
+  jv=$(printf '%s\n' "${ol_jv//$' on '/$'\n'}" | sed '2q;d'); echo -e "\n"; echo -e  "\033[1;34mOpen
+  Liberty release:\033[0m \033[1;36m$release\033[0m"; echo -e "\033[1;34mOpen Liberty
+  build number:\033[0m \033[1;36m$number\033[0m"; echo -e "\033[1;34mJava version:\033[0m
+  \033[1;36m$jv\033[0m";
+- cd target/liberty/wlp/usr/servers/defaultServer/logs/; repo_name=$(echo "$TRAVIS_REPO_SLUG"
+  | sed -e "s/\//-/g"); if [ "$TRAVIS_TEST_RESULT" -eq 0 ]; then result="passed";
+  else result="failed"; fi; serverlogsarchive="$repo_name-$TRAVIS_BUILD_NUMBER-$result.zip";zip
+  -r "$serverlogsarchive" .; curl -H "$JFROG_TOKEN" -T "$serverlogsarchive" "https://na.artifactory.swg-devops.com/artifactory/hyc-openliberty-guides-files-generic-local/";
+notifications:
+  slack:
+    template:
+    - 'Build: <%{build_url}| %{build_number}> | Commit (<%{compare_url}|%{commit}>):
+      %{commit_message}'
+    - 'Repo@Branch: %{repository_slug}@%{branch}'
+    - 'Author: %{author}'
+    - 'Summary: %{result} in %{duration}'
+    rooms:
+      secure: MdrWKvdRwGEdyJdT3odb+ZyV0vWsYYJInNT3sjVkHXS4JG09gyKwr1yDhomI0wJuisZV1C8TxiqRE4ZFvL1W8lahUASpWNJVh6uvK55hbnVwjHSaoklsiiUkyq2nGp1+qA/BhlwTHjsjnq+WfNO3BDeeIkrVqDhYkDrasTqX5UVyOWD5m8Y9dXabkyU4ma3c31XlXPg+vUh4MKUZHb4ZczfNO2xVdWDkOQo9yBRyVBik+zUMPEIPD0b9OdKHwCoB7RaYY1wvEW7Gt2d3rq5NEPTfjYY9QxR/u07fIxxwT3IdGcyMF0yDB+ZPj/L97cBlT5XrIs0AOCy734z0PmPIyrAja+v1ZVOpJ8PSRVTQbaoCj/9rYHaguHy6KzdIpiJB17Y1+qrPBhS13sTa9uZoTxeWBj8ctZ0ljULi/XABAyTjzd2hfuPpxJgpEgX7RVHxHLY50PkpGZdt+GVqYODpUiBbqtxv85lXwwVpSNVQXGnvA0OW3bg9a9aldIiWCeXqbiySUMN5NwXT3RtFVIBsaubxlOmUKaUrw+WJrO/cw1sq0Hk/dBWJ9oTK+yfks8xo4F5ES6DxMK63t0pN2ASWTKWh+DztPSG6AsFr2ghuk87RlBeGh1C9Ltsf53bu2Ck+tvC4zrPISmmMlxnCdRDLkobASXo6nqQdILT366ftf5s=
+    on_success: never
+    on_failure: always
+branches:
+  only:
+  - master
