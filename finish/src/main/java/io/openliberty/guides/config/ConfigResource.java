@@ -32,7 +32,7 @@ public class ConfigResource {
 
   // tag::config[]
   @Inject
-  private Config config;
+  //private Config config;
   // end::config[]
 
   @GET
