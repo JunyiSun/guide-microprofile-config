@@ -28,11 +28,11 @@ import org.eclipse.microprofile.config.spi.ConfigSource;
 
 @RequestScoped
 @Path("/")
-// public class ConfigResource {
+public class ConfigResource {
 
   // tag::config[]
   @Inject
-  private Config config;
+  //private Config config;
   // end::config[]
 
   @GET
